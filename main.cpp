@@ -1,30 +1,18 @@
 #include <iostream>
 
-#include "grabber.h"
-#include "frame_processor.h"
+#include "grabber.hpp"
+#include "frame_processor.hpp"
+#include "manager.hpp"
 
 using namespace std;
 
+boost::lockfree::spsc_queue<cv::Mat, boost::lockfree::capacity<400>> ThreadQueue::_spscQueue{};
+
 int main()
 {
+    Manager manager("/home/fedor/Downloads/mixkit-happy-smiling-girl-4689.mp4", Grabber::EDeviceType::file);
 
-    Grabber grabber("/home/fedor/Downloads/mixkit-happy-smiling-girl-4689.mp4", Grabber::EDeviceType::file);
-
-    FrameProcessor frameProcessor;
-
-    if (grabber.Open() != Grabber::EOpenStatus::success)
-        return 1;
-
-    while(true)
-    {
-        auto [isGrab, frame] = grabber.GetFrame();
-        if (!isGrab)
-            break;
-
-        auto processedFrame = frameProcessor.Process(frame);
-        cv::imshow("Frame", frame);
-        cv::waitKey(0);
-    }
+    manager.Run();
 
     return 0;
 }

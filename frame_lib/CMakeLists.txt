@@ -5,6 +5,7 @@ project(grabberLib LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package (Threads)
 find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED COMPONENTS thread)
 
@@ -14,7 +15,12 @@ include_directories(
     ${BOOST_LOCKFREE_DIR})
 
 
-add_library(${PROJECT_NAME} grabber.cpp frame_processor.cpp)
+add_library(${PROJECT_NAME}
+    grabber.cpp
+    frame_processor.cpp
+    manager.cpp)
+
 target_link_libraries(${PROJECT_NAME}
     ${OpenCV_LIBS}
-    ${Boost_LIBRARIES})
+    ${Boost_LIBRARIES}
+    Threads::Threads)

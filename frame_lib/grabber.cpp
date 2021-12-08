@@ -1,9 +1,15 @@
-#include "grabber.h"
+#include "grabber.hpp"
 
 Grabber::Grabber(const std::string &devicePath, EDeviceType deviceType) :
     _capturePtr{std::make_unique<cv::VideoCapture>()}, _devicePath{devicePath}
 {
     _capturePtr->setExceptionMode(true);
+}
+
+Grabber::~Grabber()
+{
+    if (_workerThread.joinable())
+        _workerThread.join();
 }
 
 Grabber::EOpenStatus Grabber::Open()
@@ -29,13 +35,24 @@ Grabber::EOpenStatus Grabber::Open()
 std::pair<bool, cv::Mat> Grabber::GetFrame()
 {
     cv::Mat grabbedFrame;
-
-//    m_frameWidth = static_cast<int>(m_cap.get(cv::CAP_PROP_FRAME_WIDTH));
-//    m_frameHeight = static_cast<int>(m_cap.get(cv::CAP_PROP_FRAME_HEIGHT));
-//    m_fps = static_cast<int>(m_cap.get(cv::CAP_PROP_FPS));
-
-//    _capturePtr->grab();
     bool isGrab = _capturePtr->read(grabbedFrame);
 
     return { isGrab, grabbedFrame };
+}
+
+void Grabber::WorkFunc()
+{
+    while (true)
+    {
+        auto [isGrab, frame] = GetFrame();
+            ThreadQueue::Push(frame);
+
+        if (isGrab)
+            return;
+    }
+}
+
+void Grabber::Run()
+{
+    _workerThread = std::thread(&Grabber::WorkFunc, this);
 }
