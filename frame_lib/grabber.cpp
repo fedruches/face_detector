@@ -42,12 +42,14 @@ std::pair<bool, cv::Mat> Grabber::GetFrame()
 
 void Grabber::WorkFunc()
 {
+    static int i = 0;
+
     while (true)
     {
         auto [isGrab, frame] = GetFrame();
-            ThreadQueue::Push(frame);
+        while(!ThreadQueue::Push(frame))
 
-        if (isGrab)
+        if (!isGrab)
             return;
     }
 }
