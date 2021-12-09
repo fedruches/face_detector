@@ -24,7 +24,7 @@ public:
         error = 1
     };
 
-    Grabber(const std::string &devicePath, EDeviceType deviceType);
+    Grabber(const std::string &devicePath, EDeviceType deviceType, std::atomic_bool &isStop);
 
     ~Grabber();
 
@@ -42,6 +42,8 @@ private:
     std::string _devicePath;
 
     std::thread _workerThread;
+
+    std::atomic_bool &_isStop;
 };
 
 #endif // MODULE_H

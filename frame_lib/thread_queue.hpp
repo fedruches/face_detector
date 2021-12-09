@@ -19,7 +19,7 @@ public:
     }
 
 private:
-    static boost::lockfree::spsc_queue<cv::Mat, boost::lockfree::capacity<400>> _spscQueue;
+    static boost::lockfree::spsc_queue<cv::Mat, boost::lockfree::capacity<1024>> _spscQueue;
 };
 
 #endif // THREAD_QUEUE_HPP

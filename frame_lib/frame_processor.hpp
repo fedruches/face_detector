@@ -12,7 +12,7 @@
 class FrameProcessor
 {
 public:
-    FrameProcessor();
+    FrameProcessor(std::atomic_bool &isStop);
 
     ~FrameProcessor();
 
@@ -24,6 +24,8 @@ public:
 
 private:
     std::thread _workerThread;
+
+    std::atomic_bool &_isStop;
 };
 
 #endif // FRAMEPROCESSOR_H

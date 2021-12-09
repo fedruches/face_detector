@@ -1,6 +1,6 @@
 #include "frame_processor.hpp"
 
-FrameProcessor::FrameProcessor()
+FrameProcessor::FrameProcessor(std::atomic_bool &isStop) : _isStop{isStop}
 {
 }
 
@@ -16,22 +16,28 @@ cv::Mat FrameProcessor::Process(const cv::Mat &frame)
 
     cv::bitwise_not(frame, tmpMat);
 
-    return frame;
+    return tmpMat;
 }
 
 void FrameProcessor::WorkFunc()
 {
-    static int i = 0;
+    static std::size_t i = 0;
+    cv::Mat frame;
 
-    while (true)
+    while (!_isStop)
     {
-        cv::Mat frame;
-        while (ThreadQueue::Pop(frame))
+        while (ThreadQueue::Pop(frame) && !_isStop)
         {
-            Process(frame);
-            cv::imwrite("frame_" + std::to_string(i++) + ".png", frame);
+            if  (i % 3 == 0)
+            {
+                std::cout << i << std::endl;
+                cv::imwrite("frame_"+ std::to_string(i) + ".jpg", frame, { cv::IMWRITE_JPEG_QUALITY, 60 });
+            }
+            i++;
         }
     }
+
+    std::cout << "Stop FrameProcessor..." << std::endl;
 }
 
 void FrameProcessor::Run()

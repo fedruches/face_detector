@@ -1,7 +1,9 @@
 #include "grabber.hpp"
 
-Grabber::Grabber(const std::string &devicePath, EDeviceType deviceType) :
-    _capturePtr{std::make_unique<cv::VideoCapture>()}, _devicePath{devicePath}
+Grabber::Grabber(const std::string &devicePath, EDeviceType deviceType, std::atomic_bool &isStop) :
+    _capturePtr{std::make_unique<cv::VideoCapture>()},
+    _devicePath{devicePath},
+    _isStop{isStop}
 {
     _capturePtr->setExceptionMode(true);
 }
@@ -35,23 +37,39 @@ Grabber::EOpenStatus Grabber::Open()
 std::pair<bool, cv::Mat> Grabber::GetFrame()
 {
     cv::Mat grabbedFrame;
-    bool isGrab = _capturePtr->read(grabbedFrame);
+    try
+    {
+        _capturePtr->read(grabbedFrame);
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << std::endl;
+        return { false, {} };
+    }
+    catch (...)
+    {
+        std::cerr << "Unknown exception" << std::endl;
+        return { false, {} };
+    }
 
-    return { isGrab, grabbedFrame };
+    return { true, grabbedFrame };
 }
 
 void Grabber::WorkFunc()
 {
     static int i = 0;
 
-    while (true)
+    while (!_isStop)
     {
         auto [isGrab, frame] = GetFrame();
-        while(!ThreadQueue::Push(frame))
+        if (!isGrab || frame.empty())
+            break;
 
-        if (!isGrab)
-            return;
+        while(!ThreadQueue::Push(frame))
+            continue;
     }
+
+    std::cout << "Stop Grabber..." << std::endl;
 }
 
 void Grabber::Run()
